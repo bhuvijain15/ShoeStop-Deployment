@@ -1,0 +1,23 @@
+
+services:
+  backend:
+    build:
+      context: ./shoestop-backend
+      dockerfile: Dockerfile
+    container_name: shoestop-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./shoestop-backend/.env
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./shoestop-frontend
+      dockerfile: Dockerfile
+    container_name: shoestop-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
