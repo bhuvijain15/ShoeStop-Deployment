@@ -1,26 +1,29 @@
-const jwt = require('jsonwebtoken')
-const asyncHandler = require("express-async-handler")
 
+const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
 
-const authenticationMiddleware = asyncHandler(  async (req, res, next) => {
-    const authHeader = req.headers.authorization
-  
-    if (!authHeader) {
-      throw new UnauthenticatedError('No token provided')
+const authenticationMiddleware = asyncHandler(async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+            message: 'No token provided. Please login.'
+        });
     }
-  
-    const token = authHeader.split(' ')[1]
-    // console.log(token);
-  
+
+    const token = authHeader.split(' ')[1];
+
     try {
-      const decoded =  jwt.verify(token, process.env.JWT_SECRET)
-      
-      req.user = decoded
-      console.log(req.user);
-      next()
-    } catch (error) {
-      throw new UnauthenticatedError('Not authorized to access this route')
-    }
-  } )
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-module.exports = authenticationMiddleware
+        req.user = decoded;
+        next();
+
+    } catch (error) {
+        return res.status(401).json({
+            message: 'Invalid or expired token. Please login again.'
+        });
+    }
+});
+
+module.exports = authenticationMiddleware;
