@@ -1,56 +1,89 @@
-const fav = require('../modal/fav')
 
-const addFavs = async (req,res) =>{
-    try{
-        const { title , image , company,price} = req.body
+const fav = require('../modal/fav');
 
-        const existingProduct = await fav.findOne({ title : title });
+const addFavs = async (req, res) => {
+    try {
+        const { title, image, company, price } = req.body;
+        const userId = req.user.id;
 
-        if(existingProduct)
-        {
-            res.status(202).json({result : "already in fav list"})
-        }
-        else{
-            const favProduct = await fav.create({
-                title , image , company,price
-            });
-            res.status(201).json({
-                message: 'Product added to favorites',
-                fav : favProduct
+        const existingProduct = await fav.findOne({
+            title: title,
+            user: userId
+        });
+
+        if (existingProduct) {
+            return res.status(202).json({
+                result: "already in fav list"
             });
         }
 
-    
+        const favProduct = await fav.create({
+            title,
+            image,
+            company,
+            price,
+            user: userId
+        });
 
-    }
-    catch(error)
-    {
-        console.log(error);
-    }
-}
+        res.status(201).json({
+            message: 'Product added to favorites',
+            fav: favProduct
+        });
 
-const getAllfavProducts = async(req,res)=>{
-    try{
-        const allfavProducts = await fav.find({})
-        res.json(allfavProducts)
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Unable to add product to favorites"
+        });
     }
-    catch(error)
-    {
-        res.json({error : error})
-    }
-}
+};
 
-const removeFromFav = async (req,res)=>{
-    try{
-        const { _id : favID } = req.params
+const getAllfavProducts = async (req, res) => {
+    try {
+        const userId = req.user.id;
 
-        const deleteFav = await fav.findOneAndDelete({favID })
-        res.json(deleteFav)
-    }
-    catch(error)
-    {
-       console.log(error);
-    }
-}
+        const allfavProducts = await fav.find({
+            user: userId
+        });
 
-module.exports = { addFavs ,getAllfavProducts,removeFromFav}
+        res.json(allfavProducts);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Unable to fetch favorite products"
+        });
+    }
+};
+
+const removeFromFav = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const favID = req.params.id;
+
+        const deleteFav = await fav.findOneAndDelete({
+            _id: favID,
+            user: userId
+        });
+
+        if (!deleteFav) {
+            return res.status(404).json({
+                message: "Favorite product not found"
+            });
+        }
+
+        res.json(deleteFav);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Unable to remove favorite product"
+        });
+    }
+};
+
+module.exports = {
+    addFavs,
+    getAllfavProducts,
+    removeFromFav
+};

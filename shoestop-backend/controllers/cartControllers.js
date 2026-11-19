@@ -1,58 +1,84 @@
-const cart = require("../modal/cartSchema")
 
+const cart = require("../modal/cartSchema");
 
-const addcarts = async (req,res) =>{
-    try{
-        const { title , image , company,price , quantity} = req.body
-        console.log(req.user);
+const addcarts = async (req, res) => {
+    try {
+        const { title, image, company, price } = req.body;
+        const userId = req.user.id;
 
-        const existingProduct = await cart.findOne({ title : title });
+        const existingProduct = await cart.findOne({
+            title: title,
+            user: userId
+        });
 
-        if(existingProduct)
-        {
-            res.status(202).json({result : "already in cart list"})
-        }
-        else{
-            const cartProduct = await cart.create({
-                title , image , company,price,quantity:1,user : req.user._id
-            });
-            res.status(201).json({
-                message: 'Product added to cartorites',
-                cart : cartProduct
+        if (existingProduct) {
+            return res.status(202).json({
+                result: "already in cart list"
             });
         }
 
-    
+        const cartProduct = await cart.create({
+            title,
+            image,
+            company,
+            price,
+            quantity: 1,
+            user: userId
+        });
 
-    }
-    catch(error)
-    {
-        console.log(error);
-    }
-}
+        res.status(201).json({
+            message: "Product added to cart",
+            cart: cartProduct
+        });
 
-const getAllcartProducts = async(req,res)=>{
-    try{
-        const allcartProducts = await cart.find({})
-        res.json(allcartProducts)
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Unable to add product to cart" });
     }
-    catch(error)
-    {
-        res.json({error : error})
-    }
-}
+};
 
-const removeFromcart = async (req,res)=>{
-    try{
-        const { _id : cartID } = req.params
+const getAllcartProducts = async (req, res) => {
+    try {
+        const userId = req.user.id;
 
-        const deletecart = await cart.findOneAndDelete({cartID })
-        res.json(deletecart)
-    }
-    catch(error)
-    {
-       console.log(error);
-    }
-}
+        const allcartProducts = await cart.find({
+            user: userId
+        });
 
-module.exports = { addcarts ,getAllcartProducts,removeFromcart}
+        res.json(allcartProducts);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Unable to fetch cart products" });
+    }
+};
+
+const removeFromcart = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const cartID = req.params.id;
+
+        const deletecart = await cart.findOneAndDelete({
+            _id: cartID,
+            user: userId
+        });
+
+        if (!deletecart) {
+            return res.status(404).json({
+                message: "Cart product not found"
+            });
+        }
+
+        res.json(deletecart);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Unable to remove cart product" });
+    }
+};
+
+module.exports = {
+    addcarts,
+    getAllcartProducts,
+    removeFromcart
+};

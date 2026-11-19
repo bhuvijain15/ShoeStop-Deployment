@@ -9,10 +9,10 @@ router.post('/addproduct' , addProducts )
 router.get('/getproducts' , getAllProducts )
 router.post('/addfav',authMiddleware , addFavs )
 router.get('/addfav',authMiddleware , getAllfavProducts )
-router.delete('/addfav/:id', removeFromFav )
+router.delete('/addfav/:id', authMiddleware, removeFromFav)
 router.post('/addcart',authMiddleware , addcarts )
 router.get('/addcart' ,authMiddleware , getAllcartProducts )
-router.delete('/addcart/:id', removeFromcart )
+router.delete('/addcart/:id', authMiddleware, removeFromcart)
 
 
 module.exports = router

@@ -16,7 +16,20 @@ const authenticationMiddleware = asyncHandler(async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        req.user = decoded;
+        // Support both signup (id) and login (_id) tokens
+        const userId = decoded.id || decoded._id;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: 'Invalid user token.'
+            });
+        }
+
+        req.user = {
+            ...decoded,
+            id: userId
+        };
+
         next();
 
     } catch (error) {
